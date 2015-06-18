@@ -6,9 +6,9 @@ package ro.teamnet.audit.strategy;
 public interface MethodAuditingStrategyFactory {
 
     /**
-     * Retrieves the proper instance of {@link MethodAuditingStrategy} based on the audited method name.
-     * @param methodName the audited method name
+     * Retrieves an instance of {@link MethodAuditingStrategy}.
+     *
      * @return the method auditing strategy
      */
-    MethodAuditingStrategy getStrategy(String methodName);
+    MethodAuditingStrategy getStrategy();
 }

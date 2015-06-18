@@ -3,6 +3,7 @@ package ro.teamnet.audit.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.teamnet.audit.annotation.AuditedParameter;
+import ro.teamnet.audit.annotation.Option;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -16,7 +17,7 @@ public class AuditInfo {
 
     private Logger log = LoggerFactory.getLogger(AuditInfo.class);
 
-    private String auditableType;
+    private Option[] options;
     private Method method;
     private Object auditedInstance;
     private List<Object> methodArguments;
@@ -26,13 +27,13 @@ public class AuditInfo {
     /**
      * Creates an instance containing audited information.
      *
-     * @param auditableType   the type of the audited method, as specified by {@link ro.teamnet.audit.annotation.Auditable#type}
+     * @param options         options of the audited method, as specified by {@link ro.teamnet.audit.annotation.Strategy#options}
      * @param method          the audited method
      * @param auditedInstance the instance on which the audited method was called
      * @param methodArguments the arguments used in the audited method call
      */
-    public AuditInfo(String auditableType, Method method, Object auditedInstance, Object[] methodArguments) {
-        this.auditableType = auditableType;
+    public AuditInfo(Option[] options, Method method, Object auditedInstance, Object[] methodArguments) {
+        this.options = options;
         this.method = method;
         this.auditedInstance = auditedInstance;
         setArguments(method, methodArguments);
@@ -76,12 +77,12 @@ public class AuditInfo {
     }
 
     /**
-     * Getter for the auditable type.
+     * Getter for the audit strategy options.
      *
-     * @return the type of the audited method, as specified by {@link ro.teamnet.audit.annotation.Auditable#type}
+     * @return the audit strategy options.
      */
-    public String getAuditableType() {
-        return auditableType;
+    public Option[] getOptions() {
+        return options;
     }
 
     /**

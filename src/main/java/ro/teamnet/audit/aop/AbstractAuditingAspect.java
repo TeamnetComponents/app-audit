@@ -7,6 +7,8 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.teamnet.audit.annotation.Auditable;
+import ro.teamnet.audit.annotation.Option;
+import ro.teamnet.audit.annotation.Strategy;
 import ro.teamnet.audit.constants.AuditStrategy;
 import ro.teamnet.audit.strategy.MethodAuditingStrategy;
 import ro.teamnet.audit.strategy.MethodAuditingStrategyFactory;
@@ -32,10 +34,10 @@ public abstract class AbstractAuditingAspect {
      * Retrieves the proper MethodAuditingStrategyFactory implementation based on the {@link ro.teamnet.audit.annotation.Auditable#strategy} value
      * from the audited method annotation.
      *
-     * @param auditStrategy the auditing strategy, used to deretmine the MethodAuditingStrategyFactory
+     * @param auditStrategy the auditing strategy, used to determine the MethodAuditingStrategyFactory
      * @return an instance of MethodAuditingStrategyFactory
      */
-    public abstract MethodAuditingStrategyFactory getMethodAuditingStrategyFactory(String auditStrategy);
+    public abstract MethodAuditingStrategyFactory getMethodAuditingStrategyFactory(Strategy auditStrategy);
 
     /**
      * Perform auditing for all methods with the {@link ro.teamnet.audit.annotation.Auditable} annotation.
@@ -46,16 +48,18 @@ public abstract class AbstractAuditingAspect {
      */
     @Around("auditableMethod() && @annotation(auditable))")
     public Object auditMethod(ProceedingJoinPoint joinPoint, Auditable auditable) {
-        String auditStrategy = auditable.strategy();
+        Strategy auditStrategy = auditable.strategy();
 
-        if (Objects.equals(auditStrategy, AuditStrategy.IGNORE)) {
+        if (Objects.equals(auditStrategy.value(), AuditStrategy.IGNORE)) {
             return null;
         }
 
-        Method auditedMethod = ((MethodSignature) joinPoint.getSignature()).getMethod();
-        String auditableType = auditable.type() == null ? auditedMethod.getName() : auditable.type();
+        Option[] options = auditStrategy.options();
 
-        log.info("Started auditing : " + auditableType + ", using strategy : " + auditStrategy);
+        Method auditedMethod = ((MethodSignature) joinPoint.getSignature()).getMethod();
+
+        log.info("Started auditing : " + auditedMethod.getName() + ", using strategy : " + auditStrategy.value()
+                + ", and options : " + options);
 
         MethodAuditingStrategyFactory strategyFactory = getMethodAuditingStrategyFactory(auditStrategy);
         if (strategyFactory == null) {
@@ -66,10 +70,10 @@ public abstract class AbstractAuditingAspect {
         log.info("__________________________________________________________________________________________________");
         log.info("__________________________________________________________________________________________________");
 
-        AuditInfo auditInfo = new AuditInfo(auditableType, auditedMethod, joinPoint.getThis(), joinPoint.getArgs());
+        AuditInfo auditInfo = new AuditInfo(options, auditedMethod, joinPoint.getThis(), joinPoint.getArgs());
         Object auditedMethodReturnValue = null;
 
-        MethodAuditingStrategy auditingStrategy = strategyFactory.getStrategy(auditableType);
+        MethodAuditingStrategy auditingStrategy = strategyFactory.getStrategy();
 
         auditingStrategy.setAuditInfo(auditInfo);
         auditingStrategy.auditMethodBeforeInvocation();
@@ -84,7 +88,8 @@ public abstract class AbstractAuditingAspect {
             if (auditedMethodReturnValue != null) {
                 auditingStrategy.auditMethodAfterInvocation(auditedMethodReturnValue);
             }
-            log.info("Finished auditing : " + auditableType + ", using strategy : " + auditStrategy);
+            log.info("Finished auditing : " + auditedMethod.getName() + ", using strategy : " + auditStrategy.value()
+                    + ", and options : " + options);
             log.info("__________________________________________________________________________________________________");
             log.info("__________________________________________________________________________________________________");
 
