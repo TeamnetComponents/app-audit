@@ -15,6 +15,7 @@ import ro.teamnet.audit.strategy.MethodAuditingStrategyFactory;
 import ro.teamnet.audit.util.AuditInfo;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -58,8 +59,8 @@ public abstract class AbstractAuditingAspect {
 
         Method auditedMethod = ((MethodSignature) joinPoint.getSignature()).getMethod();
 
-        log.info("Started auditing : " + auditedMethod.getName() + ", using strategy : " + auditStrategy.value()
-                + ", and options : " + options);
+        log.debug("Started auditing : " + auditedMethod.getName() + ", using strategy : " + auditStrategy.value()
+                + ", and options : " + Arrays.toString(options));
 
         MethodAuditingStrategyFactory strategyFactory = getMethodAuditingStrategyFactory(auditStrategy);
         if (strategyFactory == null) {
@@ -67,8 +68,8 @@ public abstract class AbstractAuditingAspect {
             return null;
         }
 
-        log.info("__________________________________________________________________________________________________");
-        log.info("__________________________________________________________________________________________________");
+        log.debug("__________________________________________________________________________________________________");
+        log.debug("__________________________________________________________________________________________________");
 
         AuditInfo auditInfo = new AuditInfo(options, auditedMethod, joinPoint.getThis(), joinPoint.getArgs());
         Object auditedMethodReturnValue = null;
@@ -78,22 +79,22 @@ public abstract class AbstractAuditingAspect {
         auditingStrategy.setAuditInfo(auditInfo);
         auditingStrategy.auditMethodBeforeInvocation();
         try {
-            log.info("Invoking audited method: {}", auditedMethod.getName());
+            log.debug("Invoking audited method: {}", auditedMethod.getName());
             auditedMethodReturnValue = joinPoint.proceed();
-            log.info("Returned value from audited method: {}", auditedMethodReturnValue);
+            log.debug("Returned value from audited method: {}", auditedMethodReturnValue);
         } catch (Throwable throwable) {
-            log.warn("Could not proceed: ", throwable);
+            log.error("Could not proceed: ", throwable);
             auditingStrategy.auditMethodInvocationError(throwable);
         } finally {
             if (auditedMethodReturnValue != null) {
                 auditingStrategy.auditMethodAfterInvocation(auditedMethodReturnValue);
             }
-            log.info("Finished auditing : " + auditedMethod.getName() + ", using strategy : " + auditStrategy.value()
-                    + ", and options : " + options);
-            log.info("__________________________________________________________________________________________________");
-            log.info("__________________________________________________________________________________________________");
+            log.debug("Finished auditing : " + auditedMethod.getName() + ", using strategy : " + auditStrategy.value()
+                    + ", and options : " + Arrays.toString(options));
+            log.debug("__________________________________________________________________________________________________");
+            log.debug("__________________________________________________________________________________________________");
 
-            return auditedMethodReturnValue;
         }
+        return auditedMethodReturnValue;
     }
 }
