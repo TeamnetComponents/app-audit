@@ -48,7 +48,7 @@ public abstract class AbstractAuditingAspect {
      * @return the value returned by the audited method.
      */
     @Around("auditableMethod() && @annotation(auditable))")
-    public Object auditMethod(ProceedingJoinPoint joinPoint, Auditable auditable) {
+    public Object auditMethod(ProceedingJoinPoint joinPoint, Auditable auditable) throws Throwable {
         Strategy auditStrategy = auditable.strategy();
 
         if (Objects.equals(auditStrategy.value(), AuditStrategy.IGNORE)) {
@@ -85,6 +85,7 @@ public abstract class AbstractAuditingAspect {
         } catch (Throwable throwable) {
             log.error("Could not proceed: ", throwable);
             auditingStrategy.auditMethodInvocationError(throwable);
+            throw throwable;
         } finally {
             if (auditedMethodReturnValue != null) {
                 auditingStrategy.auditMethodAfterInvocation(auditedMethodReturnValue);
